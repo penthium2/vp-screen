@@ -139,6 +139,7 @@ if ( for edid in $(echo "$xrand" | awk '{print $2}') ; do if ! grep -qs "$edid" 
     done < <(echo "$ECRAN")
     xrandr $rand
 else
+    pos="${PRIMARY_size%x*}"
     echo "$xrand"
         for (( i=1 ; i<=nb ; i+=1 )) ; do
                 echo "detected ${card[$i,screen]} ${card[$i,size]}"
@@ -150,7 +151,7 @@ else
         done
         unset i
         echo "xrandr --output $PRIMARY_screen --mode $PRIMARY_size --pos 0x0 ${rand[*]}"
-        xrandr --output "$PRIMARY_screen" --mode "$PRIMARY_size" --pos 0x0 "${rand[*]}"
+        xrandr --output "$PRIMARY_screen" --mode "$PRIMARY_size" --pos 0x0 ${rand[*]}
 fi
 unset rand
 pos=0
