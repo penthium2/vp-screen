@@ -127,8 +127,10 @@ funk_restart_polybar() {
 }
 #######################################################################################
 funk_load_default() {
-    
-if ( for edid in $(echo "$xrand" | awk '{print $2}') ; do if ! grep -qs "$edid" ~/.config/vp-screeen/vp-screen.conf ; then exit 2 ; fi ;done ) ; then 
+    echo "$xrand"
+#if ( for edid in $(echo "$xrand" | awk '{print $2}') ; do if ! grep  "$edid" ~/.config/vp-screeen/vp-screen.conf ; then exit 2 ; fi ;done ) ; then 
+if ( for edid in $(echo "$ECRAN " | awk '{print $3}') ; do if ! echo "$xrand" | grep "$edid" ; then exit 2 ; fi ; done) ; then
+#if ! echo "$xrand" | grep "$edid" ; then
     pos=0
     while read screen size edid ; do
         if [[ "$screen" = "$PRIMARY_screen" ]] ; then
@@ -175,9 +177,6 @@ while true ; do
         sleep 4
         funk_list
         funk_load_default
-        if hash polybar ; then
-            ~/.config/polybar/launch_polybar.sh
-        fi
         funk_restart_polybar
         unset rand
         pos=0
