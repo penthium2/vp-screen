@@ -29,9 +29,11 @@ echo -e '\t\t\t\t\e[1;34m Iä! Shub-Niggurath\e[0m'
 ########################################################################################
 funk_list() {
     nb=1
-    xrand="$(xrandr --verbose |sed -E 's/^([A-Z])/\n\1/' |grep -A 60 ' connected' |sed -nE '/^[[:alpha:]]/ s/([^ ]+).*$/\1/p; /EDID:/ N;s/\n/ /;/EDID:/ N;s/\n/ /;/EDID:/ N;s/\n/ /;/EDID:/ N;s/\n/ /;/EDID:/ N;s/\n/ /;/EDID:/ N;s/\n/ /;/EDID:/ N;s/\n/ /;/EDID:/ N;s/\n/ /;/EDID:/ s/[[:space:]]//g;s/EDID://p;/\+preferred/ s/^ +([^ ]+) .*$/\1\n/p' |sed 'N;s/\n/ /;N;s/\n/ /;N;s/\n/ /')"
+    # thank topklean for : awk '/ connected /{f=1}/^$/{f=0}f' 
+    xrand="$(xrandr --verbose |sed -E 's/^([A-Z])/\n\1/' |awk '/ connected /{f=1}/^$/{f=0}f' |sed -nE '/^[[:alpha:]]/ s/([^ ]+).*$/\1/p; /EDID:/ N;s/\n/ /;/EDID:/ N;s/\n/ /;/EDID:/ N;s/\n/ /;/EDID:/ N;s/\n/ /;/EDID:/ N;s/\n/ /;/EDID:/ N;s/\n/ /;/EDID:/ N;s/\n/ /;/EDID:/ N;s/\n/ /;/EDID:/ s/[[:space:]]//g;s/EDID://p;/\+preferred/ s/^ +([^ ]+) .*$/\1\n/p' |sed 'N;s/\n/ /;N;s/\n/ /;N;s/\n/ /')"
     for carte in /sys/class/drm/card?-* ; do
-        status=$(cat "$carte"/status)
+        #thank topklean for : $(< "$carte/status")
+        status=$(< "$carte/status")
         if [[ "$status" = connected ]] ; then
             card["$nb,edid"]=$(edid-decode -H "$carte"/edid |sed -nE '/[^e ]/ N;s/\n//;N;s/\n//;N;s/\n//;N;s/\n//;N;s/\n//;N;s/\n//;N;s/\n//;N;s/\n//;N;s/\n//;s/ //g;s/^.*:([^:])/\1/p')
             output="$(edid-decode "$carte"/edid)"
@@ -44,14 +46,13 @@ funk_list() {
                 fi
             done < <(echo "$xrand")
         fi
-        if [[ "${card[$i,status]}" != "$status" ]] ; then
+        if [[ "${card[$nb,status]}" != "$status" ]] ; then
             card["$nb,status"]="$status"
         fi
         card["$nb,carte"]="$carte"
         nb+=1
     done
     (( nb-- ))
-    ##### DEBUG ####
 }
 declare -A card
 ########################################################################################
@@ -110,12 +111,13 @@ ______________   ______________   ______________   ______________
         l+=1
     done
     unset k
-    cat > "$fic_conf" <<EOF
-$HEAD
-PRIMARY_screen=$PRIMARY_screen
-PRIMARY_size=$PRIMARY_size
-ECRAN="$(echo ${setting[@]} | sed 's/;/\n/g')"
-EOF
+    #thank topklean for : <<-
+    cat > "$fic_conf" <<-EOF
+	$HEAD
+	PRIMARY_screen=$PRIMARY_screen
+	PRIMARY_size=$PRIMARY_size
+	ECRAN="$(echo ${setting[@]} | sed 's/;/\n/g')"
+	EOF
 }
 ########################################################################################
 funk_restart_polybar() {
@@ -136,7 +138,9 @@ if ( for edid in $(echo "$xrand" | awk '{print $2}') ; do if ! grep -qs "$edid" 
             rand="$rand --output $screen --mode $size --pos ${pos}x0"
             pos=$(( pos + ${size%x*} ))
         fi
-    done < <(echo "$ECRAN")
+    # thank topklean for : <<<
+    done <<< "$ECRAN"
+    echo "$rand"
     xrandr $rand
 else
     pos="${PRIMARY_size%x*}"
